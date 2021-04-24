@@ -64,17 +64,17 @@ jobs:
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
           aws s3 mb s3://$BUCKET_NAME
           aws s3 cp layer.zip s3://$BUCKET_NAME
-          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayer }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
+          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayerName }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
           echo &layerARN
           echo "LAYER_ARN=$(layerARN)" >> $GITHUB_ENV
       - name: public layer
         run: |
-          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayer }} --query 'max_by(LayerVersions, &Version).Version')
-          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayer }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
+          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
+          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
       - name: clean s3
         if: always()
         run: |
-          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.name }}
+          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
           aws s3 rb --force s3://$BUCKET_NAME
 
 #  smoke-test:
