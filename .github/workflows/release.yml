@@ -33,7 +33,7 @@ jobs:
           key: ${{ github.event.inputs.sourceLayerARN }}
       - name: download layer
         run: |
-          URL=$(aws lambda get-layer-version-by-arn --arn $layerArn --query Content.Location --output text)
+          URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
           curl $URL -o layer.zip
 
   publish-to-prod:
