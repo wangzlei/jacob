@@ -96,7 +96,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 #          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
 #          role-duration-seconds: 1200
-          aws-region: us-east-1
+          aws-region: ap-south-1
       # Login to ECR since may be needed for Python build image.
       - name: Login to Public ECR
         uses: docker/login-action@v1
@@ -121,6 +121,8 @@ jobs:
         working-directory: ${{ matrix.terraform_directory }}
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+      - name: Sleep for a while
+        run: sleep 600
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
         if: always()

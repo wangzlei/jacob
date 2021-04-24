@@ -71,6 +71,9 @@ jobs:
         run: |
           layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
           aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
+      - name: output
+        run: |
+          echo "::set-output name=layerARN::$LAYER_ARN"
       - name: clean s3
         if: always()
         run: |
