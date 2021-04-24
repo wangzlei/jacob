@@ -123,6 +123,7 @@ jobs:
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Sleep for a while
         run: sleep 600
+        
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
         if: always()
