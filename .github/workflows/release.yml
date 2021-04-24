@@ -42,7 +42,7 @@ jobs:
     strategy:
       matrix: ${{fromJson(github.event.inputs.regions)}}
     outputs:
-      layerARNSS:  ${{ steps.set-output.outputs.layerarn }}
+      layerARNSS:  ${{ steps.output.outputs.layerarn }}
     steps:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
