@@ -48,7 +48,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
 #          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN_PROD }}
 #          role-duration-seconds: 1200
-          aws-region: us-east-1
+          aws-region: ${{ matrix.region }}
       - name: Cache layer
         uses: actions/cache@v2
         id: cache-layer
@@ -61,7 +61,7 @@ jobs:
           exit 1
       - name: publish
         run: |
-          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.name }}
+          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
           aws s3 mb s3://$BUCKET_NAME
           aws s3 cp layer.zip s3://$BUCKET_NAME
           layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayer }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
