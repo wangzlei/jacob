@@ -98,10 +98,12 @@ jobs:
 #          role-duration-seconds: 1200
           aws-region: ap-south-1
       # Login to ECR since may be needed for Python build image.
-#      - name: Login to Public ECR
-#        uses: docker/login-action@v1
-#        with:
-#          registry: public.ecr.aws
+      - name: Login to Public ECR
+        uses: docker/login-action@v1
+        with:
+          registry: public.ecr.aws
+        env:
+          AWS_REGION: us-east-1
       - name: Build layers / functions
         run: ${{ matrix.build_command }}
         working-directory: ${{ matrix.build_directory }}
@@ -122,8 +124,7 @@ jobs:
       - name: Send request to endpoint
         run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
       - name: Sleep for a while
-        run: sleep 600
-
+        run: sleep 6
       # TODO(anuraaga): Verify telemetry
       - name: Destroy terraform
         if: always()
