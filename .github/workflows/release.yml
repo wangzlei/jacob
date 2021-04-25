@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       smoke-matrix-include: ${{ steps.setup.outputs.include }}
+      aws_region: ${{ steps.regions.outputs.aws_region }}
     steps:
       - name: setup matrix for smoke test
         id: setup
@@ -42,6 +43,25 @@ jobs:
             ;;
           esac
           echo "::set-output name=include::$output_json"
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          #          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          #          role-duration-seconds: 1200
+          aws-region: us-east-1
+      - name: get aws regions in prod credentials
+        id: regions
+        run: |
+          output_json=${{ github.event.inputs.aws_region }}
+          if [ -z $output_json ]; then
+          output_json=$(aws ec2 describe-regions | jq '[.Regions[].RegionName]')
+          else
+          echo $output_json
+          fi
+          echo "--------"
+          echo $output_json
+          echo "::set-output name=aws_region::$output_json"
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
