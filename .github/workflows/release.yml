@@ -118,7 +118,7 @@ jobs:
           - python38
 #          - ${{ github.event.inputs.toLayerType }}
         include:
-          - ${{needs.setup-smoke-matrix.outputs.smoke-matrix}}
+          - ${{fromJson(needs.setup-smoke-matrix.outputs.smoke-matrix)}}
 #          - type: java-agent
 #            language: java
 #            build_directory: java
