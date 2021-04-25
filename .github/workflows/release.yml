@@ -11,6 +11,10 @@ on:
         description: 'Publish to layer name (ie: aws-otel_python38_ver-1-1-0)'
         required: true
         default: test-1
+      toLayerType:
+        description: 'Layer type such as: JavaWrapper, JavaAgent, Python38, NodeJs'
+        required: true
+        default: Python38
       regions:
         description: 'Deploy to regions'
         retuired: true
@@ -19,8 +23,6 @@ on:
 jobs:
   download-layer-from-source:
     runs-on: ubuntu-latest
-    outputs:
-      output1: ${{ steps.output-test.outputs.test }}
     steps:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -39,17 +41,12 @@ jobs:
         run: |
           URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
           curl $URL -o layer.zip
-      - id: output-test
-        run: |
-          echo "::set-output name=test::hello"
 
   publish-to-prod:
     runs-on: ubuntu-latest
     needs: download-layer-from-source
     strategy:
       matrix: ${{fromJson(github.event.inputs.regions)}}
-    outputs:
-      ${{ matrix.region }}:  ${{ steps.output.outputs.layerarn }}
     steps:
       - name: output-next-test
         run: |
@@ -78,15 +75,19 @@ jobs:
           aws s3 cp layer.zip s3://$BUCKET_NAME
           layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayerName }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
           echo $layerARN
-          echo "LAYER_ARN=$layerARN" >> $GITHUB_ENV
+          mkdir ${{ github.event.inputs.toLayerName }}
+          $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
+          cat ${{ github.event.inputs.toLayerName }}/$AWS_REGION
       - name: public layer
         run: |
           layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
           aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
-      - name: output
-        id: output
-        run: |
-          echo "::set-output name=$layerarn::$LAYER_ARN"
+      - name: upload layer arn artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.event.inputs.toLayerName }}
+          path: ${{ github.event.inputs.toLayerName }}/${{matrix.region}}
       - name: clean s3
         if: always()
         run: |
@@ -101,6 +102,27 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-to-prod
     steps:
-      - name: test output
+      - name: download layerARNs
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ github.event.inputs.toLayerName }}
+          path: ${{ github.event.inputs.toLayerName }}
+      - name: show layerARNs
         run: |
-          echo ${{ needs.publish-to-prod.outputs.us-east-1 }}
+          for file in ${{ github.event.inputs.toLayer }}/*
+          do
+          echo $file
+          cat $file
+          done
+      - name: Generate layer-note
+        run: |
+          echo "| Region | Layer ARN |" >> layer-note
+          echo "|  ----  | ----  |" >> layer-note
+          cd ${{ github.event.inputs.toLayerName }}
+          for file in *
+          do
+          read arn < $file
+          echo "| " $file " | " $arn " |" >> ../layer-note
+          done
+          cd ..
+          cat release-note
