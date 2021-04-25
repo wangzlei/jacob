@@ -92,6 +92,8 @@ jobs:
       - name: test
         run: |
           echo $ {{ needs.init.outputs.aws_region }}
+          echo  ${{fromJson(needs.init.outputs.smoke-matrix-include)}}
+          echo  ${{needs.init.outputs.smoke-matrix-include}}
       - name: Cache layer
         uses: actions/cache@v2
         id: cache-layer
