@@ -22,90 +22,91 @@ on:
         default: "{\"region\": [ \"us-east-1\", \"us-east-2\"]}"
 
 jobs:
-  download-layer-from-source:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
-#          role-duration-seconds: 1200
-          aws-region: us-east-1
-      - name: Cache layer
-        uses: actions/cache@v2
-        id: cache-layer
-        with:
-          path: ./layer.zip
-          key: ${{ github.event.inputs.sourceLayerARN }}
-      - name: download layer
-        run: |
-          URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
-          curl $URL -o layer.zip
-
-  publish-to-prod:
-    runs-on: ubuntu-latest
-    needs: download-layer-from-source
-    strategy:
-      matrix: ${{fromJson(github.event.inputs.regions)}}
-    steps:
-      - name: output-next-test
-        run: |
-          echo ${{ needs.download-layer-from-source.outputs.output1 }}
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
-#          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN_PROD }}
-#          role-duration-seconds: 1200
-          aws-region: ${{ matrix.region }}
-          mask-aws-account-id: false
-      - name: Cache layer
-        uses: actions/cache@v2
-        id: cache-layer
-        with:
-          path: ./layer.zip
-          key: ${{ github.event.inputs.sourceLayerARN }}
-      - name: source layer missing
-        if: steps.cache-layer.outputs.cache-hit != 'true'
-        run: |
-          exit 1
-      - name: publish
-        run: |
-          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
-          aws s3 mb s3://$BUCKET_NAME
-          aws s3 cp layer.zip s3://$BUCKET_NAME
-          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayerName }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
-          echo $layerARN
-          mkdir ${{ github.event.inputs.toLayerName }}
-          echo $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
-          cat ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
-      - name: public layer
-        run: |
-          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
-          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
-      - name: upload layer arn artifact
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ github.event.inputs.toLayerName }}
-          path: ${{ github.event.inputs.toLayerName }}/${{matrix.region}}
-      - name: clean s3
-        if: always()
-        run: |
-          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
-          aws s3 rb --force s3://$BUCKET_NAME
+#  download-layer-from-source:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+##          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+##          role-duration-seconds: 1200
+#          aws-region: us-east-1
+#      - name: Cache layer
+#        uses: actions/cache@v2
+#        id: cache-layer
+#        with:
+#          path: ./layer.zip
+#          key: ${{ github.event.inputs.sourceLayerARN }}
+#      - name: download layer
+#        run: |
+#          URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
+#          curl $URL -o layer.zip
+#
+#  publish-to-prod:
+#    runs-on: ubuntu-latest
+#    needs: download-layer-from-source
+#    strategy:
+#      matrix: ${{fromJson(github.event.inputs.regions)}}
+#    steps:
+#      - name: output-next-test
+#        run: |
+#          echo ${{ needs.download-layer-from-source.outputs.output1 }}
+#      - uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+##          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN_PROD }}
+##          role-duration-seconds: 1200
+#          aws-region: ${{ matrix.region }}
+#          mask-aws-account-id: false
+#      - name: Cache layer
+#        uses: actions/cache@v2
+#        id: cache-layer
+#        with:
+#          path: ./layer.zip
+#          key: ${{ github.event.inputs.sourceLayerARN }}
+#      - name: source layer missing
+#        if: steps.cache-layer.outputs.cache-hit != 'true'
+#        run: |
+#          exit 1
+#      - name: publish
+#        run: |
+#          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
+#          aws s3 mb s3://$BUCKET_NAME
+#          aws s3 cp layer.zip s3://$BUCKET_NAME
+#          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayerName }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
+#          echo $layerARN
+#          mkdir ${{ github.event.inputs.toLayerName }}
+#          echo $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
+#          cat ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
+#      - name: public layer
+#        run: |
+#          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
+#          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
+#      - name: upload layer arn artifact
+#        if: ${{ success() }}
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: ${{ github.event.inputs.toLayerName }}
+#          path: ${{ github.event.inputs.toLayerName }}/${{matrix.region}}
+#      - name: clean s3
+#        if: always()
+#        run: |
+#          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
+#          aws s3 rb --force s3://$BUCKET_NAME
 
   setup-smoke-matrix:
     runs-on: ubuntu-latest
-    needs: publish-to-prod
+#    needs: publish-to-prod
     outputs:
       smoke-matrix: ${{ steps.dummy.outputs.test }}
     steps:
       - name: dummy
         id: dummy
         run: |
-          echo "::set-output name=test::python38"
+          python38="[ {\"type\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
+          echo "::set-output name=test::$python38"
 
   smoke-test:
     runs-on: ubuntu-latest
@@ -114,31 +115,32 @@ jobs:
       matrix:
         region: ${{fromJson(github.event.inputs.regions).region}}
         type:
-          - ${{needs.setup-smoke-matrix.outputs.smoke-matrix}}
+          - python38
 #          - ${{ github.event.inputs.toLayerType }}
         include:
-          - type: java-agent
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: sample-apps/terraform/java/aws-sdk/agent
-          - type: java-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
-          - type: nodejs
-            language: nodejs
-            build_directory: opentelemetry-lambda/nodejs
-            build_command: npm install
-            terraform_directory: sample-apps/terraform/nodejs/aws-sdk
-          - type: python38
-            language: python
-            build_directory: opentelemetry-lambda/python
-            build_command: |
-              cd sample-apps
-              ./build.sh
-            terraform_directory: sample-apps/terraform/python/aws-sdk
+          - ${{needs.setup-smoke-matrix.outputs.smoke-matrix}}
+#          - type: java-agent
+#            language: java
+#            build_directory: java
+#            build_command: ./build.sh
+#            terraform_directory: sample-apps/terraform/java/aws-sdk/agent
+#          - type: java-wrapper
+#            language: java
+#            build_directory: java
+#            build_command: ./build.sh
+#            terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
+#          - type: nodejs
+#            language: nodejs
+#            build_directory: opentelemetry-lambda/nodejs
+#            build_command: npm install
+#            terraform_directory: sample-apps/terraform/nodejs/aws-sdk
+#          - type: python38
+#            language: python
+#            build_directory: opentelemetry-lambda/python
+#            build_command: |
+#              cd sample-apps
+#              ./build.sh
+#            terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
       - name: dummy
         run: echo "dummy"
