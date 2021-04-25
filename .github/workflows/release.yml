@@ -18,7 +18,8 @@ on:
       regions:
         description: 'Deploy to regions'
         retuired: true
-        default: "{\"region\": [ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-3\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\"]}"
+#        default: "{\"region\": [ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-3\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\"]}"
+        default: "{\"region\": [ \"us-east-1\", \"us-east-2\"]}"
 
 jobs:
   download-layer-from-source:
@@ -95,14 +96,26 @@ jobs:
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
           aws s3 rb --force s3://$BUCKET_NAME
 
-  smoke-test:
+  setup-smoke-matrix:
     runs-on: ubuntu-latest
     needs: publish-to-prod
+    outputs:
+      smoke-matrix: ${{ steps.dummy.outputs.test }}
+    steps:
+      - name: dummy
+        id: dummy
+        run: |
+          echo "::set-output name=test::python38"
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: [publish-to-prod, setup-smoke-matrix]
     strategy:
       matrix:
         region: ${{fromJson(github.event.inputs.regions).region}}
         type:
-          - ${{ github.event.inputs.toLayerType }}
+          - ${{needs.setup-smoke-matrix.outputs.smoke-matrix}}
+#          - ${{ github.event.inputs.toLayerType }}
         include:
           - type: java-agent
             language: java
