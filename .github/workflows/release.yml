@@ -101,7 +101,7 @@ jobs:
     strategy:
       matrix:
         region: ${{fromJson(github.event.inputs.regions).region}}
-        type: ['java-agent', 'java-wrapper', 'nodejs', 'python38']
+        type: ${{ github.event.inputs.toLayerType }}
         include:
           - type: java-agent
             language: java
@@ -126,10 +126,6 @@ jobs:
               ./build.sh
             terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
-      - name: skip
-        if: "!contains(${{ github.event.inputs.toLayerType }}, ${{ matrix.type }}))"
-        run: exit 0
-
       - name: dummy
         run: echo "dummy"
 
