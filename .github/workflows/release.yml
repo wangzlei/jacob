@@ -6,9 +6,11 @@ on:
       sourceLayerARN:
         description: 'Clone layer from ARN: (find layer ARN from soaking workflow log)'
         required: true
+        default: arn:aws:lambda:us-east-1:886273918189:layer:opentelemetry-python-781202490-python:1
       toLayerName:
         description: 'Publish to layer name (ie: aws-otel_python38_ver-1-1-0)'
         required: true
+        default: test-1
       regions:
         description: 'Deploy to regions'
         retuired: true
@@ -17,6 +19,8 @@ on:
 jobs:
   download-layer-from-source:
     runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.output-test.outputs.test }}
     steps:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -35,6 +39,9 @@ jobs:
         run: |
           URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
           curl $URL -o layer.zip
+      - name: output-step
+        run: |
+          echo "::set-output name=test::hello"
 
   publish-to-prod:
     runs-on: ubuntu-latest
@@ -44,6 +51,9 @@ jobs:
     outputs:
       layerARNSS:  ${{ steps.output.outputs.layerarn }}
     steps:
+      - name: output-next-test
+        run: |
+          echo ${{ needs.download-layer-from-source.outputs.output1 }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
