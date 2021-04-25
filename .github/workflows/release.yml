@@ -99,7 +99,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-to-prod
     strategy:
-      matrix: ${{fromJson(github.event.inputs.regions)}}
+      matrix:
+        region: ${{fromJson(github.event.inputs.regions).region}}
     steps:
       - name: dummy
         run: echo "dummy"
@@ -131,4 +132,4 @@ jobs:
           echo "| " $file " | " $arn " |" >> ../layer-note
           done
           cd ..
-          cat release-note
+          cat layer-note
