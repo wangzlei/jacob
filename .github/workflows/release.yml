@@ -110,7 +110,7 @@ jobs:
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 rb --force s3://$BUCKET_NAME
   update-code:
-    runs-on: ubuntu-latest
+    runs-on: publish-prod
     needs: init
     steps:
       - name: download layerARNs
