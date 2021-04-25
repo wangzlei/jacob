@@ -14,7 +14,7 @@ on:
       toLayerType:
         description: 'Layer type such as: JavaWrapper, JavaAgent, Python38, NodeJs'
         required: true
-        default: Python38
+        default: python38
       regions:
         description: 'Deploy to regions'
         retuired: true
@@ -101,7 +101,8 @@ jobs:
     strategy:
       matrix:
         region: ${{fromJson(github.event.inputs.regions).region}}
-        type: ${{ github.event.inputs.toLayerType }}
+        type:
+          - ${{ github.event.inputs.toLayerType }}
         include:
           - type: java-agent
             language: java
