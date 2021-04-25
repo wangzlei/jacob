@@ -102,6 +102,7 @@ jobs:
       matrix: ${{fromJson(github.event.inputs.regions)}}
     steps:
       - name: dummy
+        run: echo "dummy"
 
   build-layer-md:
     runs-on: ubuntu-latest
