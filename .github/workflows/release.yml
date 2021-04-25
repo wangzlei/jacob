@@ -58,6 +58,7 @@ jobs:
 #          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN_PROD }}
 #          role-duration-seconds: 1200
           aws-region: ${{ matrix.region }}
+          mask-aws-account-id: false
       - name: Cache layer
         uses: actions/cache@v2
         id: cache-layer
@@ -76,7 +77,7 @@ jobs:
           layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayerName }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
           echo $layerARN
           mkdir ${{ github.event.inputs.toLayerName }}
-          $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
+          echo $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
           cat ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
       - name: public layer
         run: |
@@ -94,13 +95,17 @@ jobs:
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.region }}
           aws s3 rb --force s3://$BUCKET_NAME
 
-#  smoke-test:
-#    runs-on: ubuntu-latest
-#    needs: publish-to-prod
-#
-  build-layer-md:
+  smoke-test:
     runs-on: ubuntu-latest
     needs: publish-to-prod
+    strategy:
+      matrix: ${{fromJson(github.event.inputs.regions)}}
+    steps:
+      - name: dummy
+
+  build-layer-md:
+    runs-on: ubuntu-latest
+    needs: smoke-test
     steps:
       - name: download layerARNs
         uses: actions/download-artifact@v2
