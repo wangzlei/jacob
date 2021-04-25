@@ -100,10 +100,10 @@ jobs:
     runs-on: ubuntu-latest
 #    needs: publish-to-prod
     outputs:
-      smoke-matrix: ${{ steps.dummy.outputs.test }}
+      smoke-matrix: ${{ steps.setup.outputs.json }}
     steps:
-      - name: dummy
-        id: dummy
+      - name: build matrix for smoke test
+        id: setup
         run: |
           output_json=""
           case ${{ github.event.inputs.toLayerType }} in
@@ -116,7 +116,7 @@ jobs:
             "java-wrapper") output_json="[{\"type\": \"java-wrapper\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/wrapper\"}]"
             ;;
           esac
-          echo "::set-output name=test::$output_json"
+          echo "::set-output name=json::$output_json"
 
   smoke-test:
     runs-on: ubuntu-latest
@@ -131,7 +131,7 @@ jobs:
       - name: dummy
         run: |
           echo "dummy"
-          echo ${{matrix.region}}
+          echo ${{matrix.aws_region}}
           echo ${{matrix.type}}
           echo ${{matrix.language}}
           echo "${{matrix.build_command}}"
