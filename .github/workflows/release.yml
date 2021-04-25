@@ -109,9 +109,9 @@ jobs:
         run: |
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 rb --force s3://$BUCKET_NAME
-  build-layer-md:
+  update-code:
     runs-on: ubuntu-latest
-    needs: smoke-test
+    needs: init
     steps:
       - name: download layerARNs
         uses: actions/download-artifact@v2
@@ -142,7 +142,7 @@ jobs:
         run: echo 'todo'
   smoke-test:
     runs-on: ubuntu-latest
-    needs: [ init, publish-prod ]
+    needs: update-code
     strategy:
       matrix:
         aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
