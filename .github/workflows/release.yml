@@ -143,7 +143,9 @@ jobs:
 #            terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
       - name: dummy
-        run: echo "dummy"
+        run: |
+          echo "dummy"
+          echo ${{matrix.region}}
 
   build-layer-md:
     runs-on: ubuntu-latest
