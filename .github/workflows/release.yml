@@ -123,7 +123,7 @@ jobs:
     needs: [setup-smoke-matrix]
     strategy:
       matrix:
-        aws_region: ${{fromJson(github.event.inputs.regions).aws_region}}
+        aws_region: ${{fromJson(github.event.inputs.aws_regions).aws_region}}
         type:
           - ${{ github.event.inputs.toLayerType }}
         include: ${{fromJson(needs.setup-smoke-matrix.outputs.smoke-matrix)}}
