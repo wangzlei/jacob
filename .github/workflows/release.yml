@@ -101,6 +101,35 @@ jobs:
     strategy:
       matrix:
         region: ${{fromJson(github.event.inputs.regions).region}}
+        type:
+          include:
+            - name: java-agent
+              language: java
+              build_directory: java
+              build_command: ./build.sh
+              terraform_directory: sample-apps/terraform/java/aws-sdk/agent
+            - name: java-wrapper1
+              language: java
+              build_directory: java
+              build_command: ./build.sh
+              terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
+            - name: java-wrapper2
+              language: java
+              build_directory: java
+              build_command: ./build.sh
+              terraform_directory: sample-apps/terraform/java/okhttp/wrapper
+            - name: nodejs
+              language: nodejs
+              build_directory: opentelemetry-lambda/nodejs
+              build_command: npm install
+              terraform_directory: sample-apps/terraform/nodejs/aws-sdk
+            - name: python
+              language: python
+              build_directory: opentelemetry-lambda/python
+              build_command: |
+                cd sample-apps
+                ./build.sh
+              terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
       - name: dummy
         run: echo "dummy"
