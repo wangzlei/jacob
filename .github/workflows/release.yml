@@ -66,14 +66,6 @@ jobs:
     strategy:
       matrix: ${{fromJson(github.event.inputs.aws_region)}}
     steps:
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
-#          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN_PROD }}
-#          role-duration-seconds: 1200
-          aws-region: ${{ matrix.aws_region }}
-          mask-aws-account-id: false
       - name: Cache layer
         uses: actions/cache@v2
         id: cache-layer
@@ -84,6 +76,14 @@ jobs:
         if: steps.cache-layer.outputs.cache-hit != 'true'
         run: |
           exit 1
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          #          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN_PROD }}
+          #          role-duration-seconds: 1200
+          aws-region: ${{ matrix.aws_region }}
+          mask-aws-account-id: false
       - name: publish
         run: |
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
@@ -109,28 +109,6 @@ jobs:
         run: |
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 rb --force s3://$BUCKET_NAME
-
-#  setup-smoke-matrix:
-#    runs-on: ubuntu-latest
-##    needs: publish-to-prod
-#    outputs:
-#      smoke-matrix: ${{ steps.setup.outputs.json }}
-#    steps:
-#      - name: build matrix for smoke test
-#        id: setup
-#        run: |
-#          output_json=""
-#          case ${{ github.event.inputs.toLayerType }} in
-#            "python38") output_json="[{\"type\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
-#            ;;
-#            "nodejs") output_json="[{\"type\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
-#            ;;
-#            "java-agent") output_json="[{\"type\": \"java-agent\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/agent\"}]"
-#            ;;
-#            "java-wrapper") output_json="[{\"type\": \"java-wrapper\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/wrapper\"}]"
-#            ;;
-#          esac
-#          echo "::set-output name=json::$output_json"
 
   smoke-test:
     runs-on: ubuntu-latest
