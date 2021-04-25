@@ -53,15 +53,13 @@ jobs:
       - name: get aws regions in prod credentials
         id: regions
         run: |
-          output_json=${{ github.event.inputs.aws_region }}
-          if [ -z $output_json ]; then
-          output_json=$(aws ec2 describe-regions | jq '[.Regions[].RegionName]')
+          if [[ -z ${{ github.event.inputs.aws_region }} ]]; then
+          echo "::set-output name=aws_region::${{ github.event.inputs.aws_region }}"
+          echo "--------1"
           else
-          echo $output_json
+          echo "::set-output name=aws_region::$(aws ec2 describe-regions | jq '[.Regions[].RegionName]')"
+          echo "--------2"
           fi
-          echo "--------"
-          echo $output_json
-          echo "::set-output name=aws_region::$output_json"
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
