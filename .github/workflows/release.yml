@@ -40,6 +40,7 @@ jobs:
           URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
           curl $URL -o layer.zip
       - name: output-step
+        id: output-step
         run: |
           echo "::set-output name=test::hello"
 
@@ -84,6 +85,7 @@ jobs:
           layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
           aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
       - name: output
+        id: output
         run: |
           echo "::set-output name=layerarn::$LAYER_ARN"
       - name: clean s3
