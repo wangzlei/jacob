@@ -81,7 +81,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: init
     strategy:
-      matrix: ${{fromJson(needs.init.outputs.aws_region)}}
+      matrix:
+        aws_region: ${{fromJson(needs.init.outputs.aws_region)}}
 #      matrix: ${{fromJson(github.event.inputs.aws_region)}}
     steps:
       - name: Cache layer
