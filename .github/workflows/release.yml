@@ -109,7 +109,7 @@ jobs:
           case ${{ github.event.inputs.toLayerType }} in
             "python38") output_json="[{\"type\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
             ;;
-            "nodejs" output_json="[{\"type\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
+            "nodejs") output_json="[{\"type\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
             ;;
           esac
           echo "::set-output name=test::$output_json"
