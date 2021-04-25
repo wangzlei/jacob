@@ -49,12 +49,11 @@ jobs:
     strategy:
       matrix: ${{fromJson(github.event.inputs.regions)}}
     outputs:
-      layerARNSS:  ${{ steps.output.output-test.layerarn }}
+      layerARNSS:  ${{ steps.output.outputs.layerarn }}
     steps:
       - name: output-next-test
         run: |
           echo ${{ needs.download-layer-from-source.outputs.output1 }}
-          echo ${{ needs.download-layer-from-source.steps.output-step.test }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
@@ -101,6 +100,8 @@ jobs:
   build-layer-md:
     runs-on: ubuntu-latest
     needs: publish-to-prod
+    strategy:
+      matrix: ${{fromJson(github.event.inputs.regions)}}
     steps:
       - name: test output
         run: |
