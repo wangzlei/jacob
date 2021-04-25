@@ -146,6 +146,10 @@ jobs:
         run: |
           echo "dummy"
           echo ${{matrix.region}}
+          echo ${{matrix.type}}
+          echo ${{matrix.language}}
+          echo ${{matrix.build_command}}
+          echo ${{matrix.terraform_directory}}
 
   build-layer-md:
     runs-on: ubuntu-latest
