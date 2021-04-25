@@ -115,7 +115,7 @@ jobs:
           path: ${{ github.event.inputs.toLayerName }}
       - name: show layerARNs
         run: |
-          for file in ${{ github.event.inputs.toLayer }}/*
+          for file in ${{ github.event.inputs.toLayerName }}/*
           do
           echo $file
           cat $file
