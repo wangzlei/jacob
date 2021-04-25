@@ -54,7 +54,7 @@ jobs:
         id: regions
         run: |
           echo ${{ github.event.inputs.aws_region }}
-          if [[ -z ${{ github.event.inputs.aws_region }} ]]; then
+          if [[ -z "${{ github.event.inputs.aws_region }}" ]]; then
           echo "::set-output name=aws_region::${{ github.event.inputs.aws_region }}"
           echo "--------1"
           else
