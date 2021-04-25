@@ -39,8 +39,7 @@ jobs:
         run: |
           URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
           curl $URL -o layer.zip
-      - name: output-step
-        id: output-step
+      - id: output-test
         run: |
           echo "::set-output name=test::hello"
 
@@ -50,11 +49,12 @@ jobs:
     strategy:
       matrix: ${{fromJson(github.event.inputs.regions)}}
     outputs:
-      layerARNSS:  ${{ steps.output.outputs.layerarn }}
+      layerARNSS:  ${{ steps.output.output-test.layerarn }}
     steps:
       - name: output-next-test
         run: |
           echo ${{ needs.download-layer-from-source.outputs.output1 }}
+          echo ${{ needs.download-layer-from-source.steps.output-step.test }}
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
