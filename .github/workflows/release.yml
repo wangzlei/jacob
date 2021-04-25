@@ -87,7 +87,7 @@ jobs:
       - name: output
         id: output
         run: |
-          echo "::set-output name=layerarn::$LAYER_ARN"
+          echo "::set-output name=layerarn::${{ matrix.region }}"
       - name: clean s3
         if: always()
         run: |
