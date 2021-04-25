@@ -105,7 +105,10 @@ jobs:
       - name: dummy
         id: dummy
         run: |
-          python38="[ {\"type\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
+          java-agent="[{\"type\": \"java-agent\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/agent\"}]"
+          java-wrapper="[{\"type\": \"java-wrapper\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/wrapper\"}]"
+          nodejs="[{\"type\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
+          python38="[{\"type\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
           echo "::set-output name=test::$python38"
 
   smoke-test:
@@ -114,33 +117,8 @@ jobs:
     strategy:
       matrix:
         region: ${{fromJson(github.event.inputs.regions).region}}
-        type:
-          - python38
-#          - ${{ github.event.inputs.toLayerType }}
-        include:
-          - ${{fromJson(needs.setup-smoke-matrix.outputs.smoke-matrix)}}
-#          - type: java-agent
-#            language: java
-#            build_directory: java
-#            build_command: ./build.sh
-#            terraform_directory: sample-apps/terraform/java/aws-sdk/agent
-#          - type: java-wrapper
-#            language: java
-#            build_directory: java
-#            build_command: ./build.sh
-#            terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
-#          - type: nodejs
-#            language: nodejs
-#            build_directory: opentelemetry-lambda/nodejs
-#            build_command: npm install
-#            terraform_directory: sample-apps/terraform/nodejs/aws-sdk
-#          - type: python38
-#            language: python
-#            build_directory: opentelemetry-lambda/python
-#            build_command: |
-#              cd sample-apps
-#              ./build.sh
-#            terraform_directory: sample-apps/terraform/python/aws-sdk
+        type: ${{ github.event.inputs.toLayerType }}
+        include: ${{fromJson(needs.setup-smoke-matrix.outputs.smoke-matrix)}}
     steps:
       - name: dummy
         run: |
