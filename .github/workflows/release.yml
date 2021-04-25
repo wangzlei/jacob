@@ -3,6 +3,10 @@ name: Release public Lambda layer
 on:
   workflow_dispatch:
     inputs:
+      layerKind:
+        description: 'Layer kind such as: java-wrapper, java-agent, python3, nodejs'
+        required: true
+        default: python38
       sourceLayerARN:
         description: 'Clone layer from ARN: (find layer ARN from soaking workflow log)'
         required: true
@@ -10,11 +14,7 @@ on:
       toLayerName:
         description: 'Publish to layer name (ie: aws-otel_python38_ver-1-1-0)'
         required: true
-        default: test-1
-      toLayerType:
-        description: 'Layer type such as: java-wrapper, java-agent, python3, nodejs'
-        required: true
-        default: python38
+        default: aws-otel
       aws_region:
         description: 'Deploy to aws region'
         retuired: true
@@ -31,14 +31,14 @@ jobs:
         id: setup
         run: |
           output_json=""
-          case ${{ github.event.inputs.toLayerType }} in
-            "python38") output_json="[{\"type\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
+          case ${{ github.event.inputs.layerKind }} in
+            "python38") output_json="[{\"name\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
             ;;
-            "nodejs") output_json="[{\"type\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
+            "nodejs") output_json="[{\"name\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
             ;;
-            "java-agent") output_json="[{\"type\": \"java-agent\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/agent\"}]"
+            "java-agent") output_json="[{\"name\": \"java-agent\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/agent\"}]"
             ;;
-            "java-wrapper") output_json="[{\"type\": \"java-wrapper\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/wrapper\"}]"
+            "java-wrapper") output_json="[{\"name\": \"java-wrapper\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/wrapper\"}]"
             ;;
           esac
           echo "::set-output name=include::$output_json"
@@ -116,15 +116,15 @@ jobs:
     strategy:
       matrix:
         aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
-        type:
-          - ${{ github.event.inputs.toLayerType }}
+        name:
+          - ${{ github.event.inputs.layerKind }}
         include: ${{fromJson(needs.init.outputs.smoke-matrix-include)}}
     steps:
       - name: dummy
         run: |
           echo "dummy"
           echo ${{matrix.aws_region}}
-          echo ${{matrix.type}}
+          echo ${{matrix.name}}
           echo ${{matrix.language}}
           echo "${{matrix.build_command}}"
           echo ${{matrix.terraform_directory}}
@@ -186,6 +186,7 @@ jobs:
 #          role-duration-seconds: 1200
           aws-region: ${{ matrix.aws_region }}
       - uses: hashicorp/setup-terraform@v1
+      # TODO: update splitted canary test ARN tf to new
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ matrix.terraform_directory }}
