@@ -127,7 +127,7 @@ jobs:
             terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
       - name: skip
-        if: !(contains(${{ github.event.inputs.toLayerType }}, ${{ matrix.type }}))
+        if: "!contains(${{ github.event.inputs.toLayerType }}, ${{ matrix.type }}))"
         run: exit 0
 
       - name: dummy
