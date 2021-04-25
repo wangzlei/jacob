@@ -12,7 +12,7 @@ on:
         required: true
         default: test-1
       toLayerType:
-        description: 'Layer type such as: JavaWrapper, JavaAgent, Python38, NodeJs'
+        description: 'Layer type such as: java-wrapper, java-agent, python3, nodejs'
         required: true
         default: python38
       regions:
@@ -111,7 +111,7 @@ jobs:
             ;;
             "nodejs") output_json="[{\"type\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
             ;;
-            "java-agent") output_json="[{\"type\": \"nodejs\"}, {\"language\": \"nodejs\"}, {\"build_directory\": \"opentelemetry-lambda/nodejs\"}, {\"build_command\": \"npm install\"}, {\"terraform_directory\": \"sample-apps/terraform/nodejs/aws-sdk\"}]"
+            "java-agent") output_json="[{\"type\": \"java-agent\"}, {\"language\": \"java\"}, {\"build_directory\": \"java\"}, {\"build_command\": \"./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/java/aws-sdk/agent\"}]"
           esac
           echo "::set-output name=test::$output_json"
   #          python38="[{\"type\": \"python38\"}, {\"language\": \"python\"}, {\"build_directory\": \"opentelemetry-lambda/python\"}, {\"build_command\": \"cd sample-apps && ./build.sh\"}, {\"terraform_directory\": \"sample-apps/terraform/python/aws-sdk\"}]"
