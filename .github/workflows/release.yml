@@ -109,7 +109,37 @@ jobs:
         run: |
           BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 rb --force s3://$BUCKET_NAME
-
+  build-layer-md:
+    runs-on: ubuntu-latest
+    needs: smoke-test
+    steps:
+      - name: download layerARNs
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ github.event.inputs.toLayerName }}
+          path: ${{ github.event.inputs.toLayerName }}
+      - name: show layerARNs
+        run: |
+          for file in ${{ github.event.inputs.toLayerName }}/*
+          do
+          echo $file
+          cat $file
+          done
+      - name: generate layer-note
+        run: |
+          echo "| Region | Layer ARN |" >> layer-note
+          echo "|  ----  | ----  |" >> layer-note
+          cd ${{ github.event.inputs.toLayerName }}
+          for file in *
+          do
+          read arn < $file
+          echo "| " $file " | " $arn " |" >> ../layer-note
+          done
+          cd ..
+          cat layer-note
+      # TODO: build splitting ARN TF
+      - name: build splitting TF file
+        run: echo 'todo'
   smoke-test:
     runs-on: ubuntu-latest
     needs: [ init, publish-prod ]
@@ -186,7 +216,9 @@ jobs:
 #          role-duration-seconds: 1200
           aws-region: ${{ matrix.aws_region }}
       - uses: hashicorp/setup-terraform@v1
-      # TODO: update splitted canary test ARN tf to new
+      # TODO: update splitting ARN tf to canary sample
+      - name: update ARN tf file
+        run: echo 'todo'
       - name: Initialize terraform
         run: terraform init
         working-directory: ${{ matrix.terraform_directory }}
@@ -206,33 +238,3 @@ jobs:
         if: always()
         run: terraform destroy -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
-
-
-  build-layer-md:
-    runs-on: ubuntu-latest
-    needs: smoke-test
-    steps:
-      - name: download layerARNs
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ github.event.inputs.toLayerName }}
-          path: ${{ github.event.inputs.toLayerName }}
-      - name: show layerARNs
-        run: |
-          for file in ${{ github.event.inputs.toLayerName }}/*
-          do
-          echo $file
-          cat $file
-          done
-      - name: Generate layer-note
-        run: |
-          echo "| Region | Layer ARN |" >> layer-note
-          echo "|  ----  | ----  |" >> layer-note
-          cd ${{ github.event.inputs.toLayerName }}
-          for file in *
-          do
-          read arn < $file
-          echo "| " $file " | " $arn " |" >> ../layer-note
-          done
-          cd ..
-          cat layer-note
