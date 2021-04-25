@@ -77,7 +77,7 @@ jobs:
           echo $layerARN
           mkdir ${{ github.event.inputs.toLayerName }}
           $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
-          cat ${{ github.event.inputs.toLayerName }}/$AWS_REGION
+          cat ${{ github.event.inputs.toLayerName }}/${{ matrix.region }}
       - name: public layer
         run: |
           layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
