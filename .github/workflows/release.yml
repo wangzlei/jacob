@@ -56,6 +56,8 @@ jobs:
           if [[ -z "${{ github.event.inputs.aws_region }}" ]]; then
           output=$(aws ec2 describe-regions | jq '[.Regions[].RegionName]')
           fi
+          echo "======="
+          echo $output
           echo "::set-output name=aws_region::$output"
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -79,7 +81,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: init
     strategy:
-      matrix: ${{fromJson(github.event.inputs.aws_region)}}
+      matrix: ${{fromJson(needs.init.outputs.aws_region)}}
+#      matrix: ${{fromJson(github.event.inputs.aws_region)}}
     steps:
       - name: Cache layer
         uses: actions/cache@v2
@@ -126,7 +129,7 @@ jobs:
           aws s3 rb --force s3://$BUCKET_NAME
   update-code:
     runs-on: ubuntu-latest
-    needs: publish-prod
+    needs: [ init, publish-prod ]
     steps:
       - name: download layerARNs
         uses: actions/download-artifact@v2
@@ -160,7 +163,8 @@ jobs:
     needs: [ init, update-code ]
     strategy:
       matrix:
-        aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
+        aws_region: ${{fromJson(needs.init.outputs.aws_region)}}
+#        aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
         name:
           - ${{ github.event.inputs.layerKind }}
         include: ${{fromJson(needs.init.outputs.smoke-matrix-include)}}
