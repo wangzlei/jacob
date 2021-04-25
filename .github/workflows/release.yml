@@ -101,24 +101,24 @@ jobs:
     strategy:
       matrix:
         region: ${{fromJson(github.event.inputs.regions).region}}
-        name: ['java-agent', 'java-wrapper', 'nodejs', 'python38']
+        type: ['java-agent', 'java-wrapper', 'nodejs', 'python38']
         include:
-          - name: java-agent
+          - type: java-agent
             language: java
             build_directory: java
             build_command: ./build.sh
             terraform_directory: sample-apps/terraform/java/aws-sdk/agent
-          - name: java-wrapper
+          - type: java-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
             terraform_directory: sample-apps/terraform/java/aws-sdk/wrapper
-          - name: nodejs
+          - type: nodejs
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
             terraform_directory: sample-apps/terraform/nodejs/aws-sdk
-          - name: python38
+          - type: python38
             language: python
             build_directory: opentelemetry-lambda/python
             build_command: |
@@ -126,6 +126,10 @@ jobs:
               ./build.sh
             terraform_directory: sample-apps/terraform/python/aws-sdk
     steps:
+      - name: skip
+        if: !contains(${{ github.event.inputs.toLayerType }}, ${{ matrix.type }})
+        run: exit 0
+
       - name: dummy
         run: echo "dummy"
 
