@@ -49,7 +49,7 @@ jobs:
     strategy:
       matrix: ${{fromJson(github.event.inputs.regions)}}
     outputs:
-      layerARNSS:  ${{ steps.output.outputs.layerarn }}
+      ${{ matrix.region }}:  ${{ steps.output.outputs.layerarn }}
     steps:
       - name: output-next-test
         run: |
@@ -86,7 +86,7 @@ jobs:
       - name: output
         id: output
         run: |
-          echo "::set-output name=layerarn::${{ matrix.region }}"
+          echo "::set-output name=$layerarn::$LAYER_ARN"
       - name: clean s3
         if: always()
         run: |
@@ -100,9 +100,7 @@ jobs:
   build-layer-md:
     runs-on: ubuntu-latest
     needs: publish-to-prod
-    strategy:
-      matrix: ${{fromJson(github.event.inputs.regions)}}
     steps:
       - name: test output
         run: |
-          echo ${{ needs.publish-to-prod.outputs.layerARNSS }}
+          echo ${{ needs.publish-to-prod.outputs.us-east-1 }}
