@@ -24,6 +24,12 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/java/aws-sdk/wrapper
             expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+          - name: java-okhttp-wrapper
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: integration-tests/java/okhttp/wrapper
+            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
           - name: nodejs-awssdk
             language: nodejs
             build_directory: nodejs
@@ -36,12 +42,6 @@ jobs:
             build_command: ./build.sh
             terraform_directory: integration-tests/python/aws-sdk
             expected_template: adot/utils/expected-templates/python.json
-#                                 - name: java-okhttp-wrapper
-#                                 language: java
-#                                 build_directory: java
-#                                 build_command: ./build.sh
-#                                 terraform_directory: integration-tests/java/okhttp/wrapper
-#                                 expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
