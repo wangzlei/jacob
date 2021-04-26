@@ -17,31 +17,31 @@ jobs:
             build_directory: java
             build_command: ./build.sh
             terraform_directory: integration-tests/java/aws-sdk/agent
-            expexted_template: adot/utils/expected-templates/java-awssdk-agent.json
+            expected_template: adot/utils/expected-templates/java-awssdk-agent.json
           - name: java-awssdk-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
             terraform_directory: integration-tests/java/aws-sdk/wrapper
-            expexted_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
           - name: nodejs-awssdk
             language: nodejs
             build_directory: nodejs
             build_command: ./build.sh
             terraform_directory: integration-tests/nodejs/aws-sdk
-            expexted_template: adot/utils/expected-templates/nodejs-awssdk.json
+            expected_template: adot/utils/expected-templates/nodejs-awssdk.json
           - name: python
             language: python
             build_directory: python
             build_command: ./build.sh
             terraform_directory: integration-tests/python/aws-sdk
-            expexted_template: adot/utils/expected-templates/python.json
+            expected_template: adot/utils/expected-templates/python.json
 #                                 - name: java-okhttp-wrapper
 #                                 language: java
 #                                 build_directory: java
 #                                 build_command: ./build.sh
 #                                 terraform_directory: integration-tests/java/okhttp/wrapper
-#                                 expexted_template: adot/utils/expected-templates/java-okhttp-wrapper.json
+#                                 expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
     steps:
       - uses: actions/checkout@v2
         with:
