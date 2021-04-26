@@ -12,36 +12,42 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: java-awssdk-agent
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/aws-sdk/agent
-            expected_template: adot/utils/expected-templates/java-awssdk-agent.json
-          - name: java-awssdk-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/aws-sdk/wrapper
-            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
-          - name: java-okhttp-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/okhttp/wrapper
-            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
           - name: nodejs-awssdk
             language: nodejs
             build_directory: nodejs
             build_command: ./build.sh
             terraform_directory: integration-tests/nodejs/aws-sdk
             expected_template: adot/utils/expected-templates/nodejs-awssdk.json
-          - name: python
-            language: python
-            build_directory: python
-            build_command: ./build.sh
-            terraform_directory: integration-tests/python/aws-sdk
-            expected_template: adot/utils/expected-templates/python.json
+#          - name: java-awssdk-agent
+#            language: java
+#            build_directory: java
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/java/aws-sdk/agent
+#            expected_template: adot/utils/expected-templates/java-awssdk-agent.json
+#          - name: java-awssdk-wrapper
+#            language: java
+#            build_directory: java
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/java/aws-sdk/wrapper
+#            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+#          - name: java-okhttp-wrapper
+#            language: java
+#            build_directory: java
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/java/okhttp/wrapper
+#            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
+#          - name: nodejs-awssdk
+#            language: nodejs
+#            build_directory: nodejs
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/nodejs/aws-sdk
+#            expected_template: adot/utils/expected-templates/nodejs-awssdk.json
+#          - name: python
+#            language: python
+#            build_directory: python
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/python/aws-sdk
+#            expected_template: adot/utils/expected-templates/python.json
     steps:
       - uses: actions/checkout@v2
         with:
