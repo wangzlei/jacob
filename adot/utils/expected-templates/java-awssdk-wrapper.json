@@ -1,0 +1,22 @@
+[
+  {
+    "name":"hello-java.*"
+  },
+  {
+    "name":"hello-java.*"
+  },
+  {
+    "name":"hello-java.*"
+  },
+  {
+    "name":"hello-java.*"
+  },
+  {
+    "name":"S3",
+    "origin":"AWS::S3",
+    "inferred":true,
+    "aws":{
+      "operation":"ListBuckets"
+    }
+  }
+]

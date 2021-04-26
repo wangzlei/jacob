@@ -1,0 +1,22 @@
+[
+  {
+    "name":"hello-nodejs.*"
+  },
+  {
+    "name":"hello-nodejs.*"
+  },
+  {
+    "name":"hello-nodejs.*"
+  },
+  {
+    "name":"hello-nodejs.*"
+  },
+  {
+    "name":"S3",
+    "origin":"AWS::S3",
+    "inferred":true,
+    "aws":{
+      "operation":"ListBuckets"
+    }
+  }
+]
