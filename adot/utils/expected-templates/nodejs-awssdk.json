@@ -1,15 +1,15 @@
 [
   {
-    "name":"hello-nodejs.*"
+    "name":"hello-.*"
   },
   {
-    "name":"hello-nodejs.*"
+    "name":"hello-.*"
   },
   {
-    "name":"hello-nodejs.*"
+    "name":"hello-.*"
   },
   {
-    "name":"hello-nodejs.*"
+    "name":"hello-.*"
   },
   {
     "name":"S3",
