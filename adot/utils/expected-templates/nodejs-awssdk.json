@@ -12,11 +12,6 @@
     "name":"hello-lambda-nodejs.*"
   },
   {
-    "name":"S3",
-    "origin":"AWS::S3",
-    "inferred":true,
-    "aws":{
-      "operation":"ListBuckets"
-    }
+    "name":"s3"
   }
 ]
