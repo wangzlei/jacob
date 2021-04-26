@@ -12,26 +12,26 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: java-awssdk-agent
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/aws-sdk/agent
-          - name: java-awssdk-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/aws-sdk/wrapper
-          - name: java-okhttp-wrapper
-            language: java
-            build_directory: java
-            build_command: ./build.sh
-            terraform_directory: integration-tests/java/okhttp/wrapper
-          - name: nodejs-awssdk
-            language: nodejs
-            build_directory: nodejs
-            build_command: ./build.sh
-            terraform_directory: integration-tests/nodejs/aws-sdk
+#          - name: java-awssdk-agent
+#            language: java
+#            build_directory: java
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/java/aws-sdk/agent
+#          - name: java-awssdk-wrapper
+#            language: java
+#            build_directory: java
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/java/aws-sdk/wrapper
+#          - name: java-okhttp-wrapper
+#            language: java
+#            build_directory: java
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/java/okhttp/wrapper
+#          - name: nodejs-awssdk
+#            language: nodejs
+#            build_directory: nodejs
+#            build_command: ./build.sh
+#            terraform_directory: integration-tests/nodejs/aws-sdk
           - name: python
             language: python
             build_directory: python
