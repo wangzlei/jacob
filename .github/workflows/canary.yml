@@ -120,7 +120,7 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
         env:
-          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}
+          TF_VAR_function_name: hello-lambda-${{ matrix.language }}-${{ github.run_id }}-${{ matrix.name }}--${{ matrix.aws_region }}
       - name: Extract endpoint
         id: extract-endpoint
         run: terraform output -raw api-gateway-url
