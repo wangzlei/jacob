@@ -210,8 +210,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: layer.tf
+          path: ${{ matrix.terraform_directory }}/layer.tf
       - name: overwrite layer.tf
-        run: cp -r layer.tf ${{ matrix.terraform_directory }}/layer.tf
+        run: |
+          cat ${{ matrix.terraform_directory }}/layer.tf
+          cp -r layer.tf ${{ matrix.terraform_directory }}/layer.tf
+          cat ${{ matrix.terraform_directory }}/layer.tf
       - name: Build functions
         run: ${{ matrix.build_command }}
         working-directory: ${{ matrix.build_directory }}
