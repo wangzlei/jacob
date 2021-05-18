@@ -93,15 +93,16 @@ jobs:
           cat layer-note
       - name: generate tf layer
         run: |
-          echo "tf layers" >> layer-tf
+          echo "locals {\n  sdk_layer_arns = {" >> layer.tf
           cd ${{ github.event.inputs.layer_name }}
           for file in *
           do
           read arn < $file
-          echo "\""$file"\" = \""$arn"\"" >> ../layer-tf
+          echo "    \""$file"\" = \""$arn"\"" >> ../layer.tf
           done
           cd ..
-          cat layer-tf
+          echo "  }\n}\n" >> layer.tf
+          cat layer.tf
       - name: upload layer tf file
         uses: actions/upload-artifact@v2
         with:
