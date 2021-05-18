@@ -3,19 +3,19 @@ name: Release public Lambda layer
 on:
   workflow_dispatch:
     inputs:
-      layerKind:
-        description: 'Layer kind such as: java-wrapper, java-agent, python3, nodejs'
+      layer_kind:
+        description: 'Layer kind such as: java-wrapper, java-agent, python38, nodejs'
         required: true
-      sourceLayerARN:
+      source_layer_arn:
         description: 'Clone layer from ARN: (find layer ARN from soaking workflow log)'
         required: true
-      toLayerName:
-        description: 'Publish to layer name (ie: aws-otel_python38_ver-1-1-0)'
+      layer_name:
+        description: 'Publish to layer name (ie: aws-otel-python38-ver-1-1-0)'
         required: true
       aws_region:
         description: 'Deploy to aws region'
         retuired: true
-        default: "{\"aws_region\": [ \"us-east-1\", \"us-east-2\", \"us-west-1\", \"us-west-2\", \"ap-south-1\", \"ap-northeast-3\", \"ap-northeast-2\", \"ap-southeast-1\", \"ap-southeast-2\", \"ap-northeast-1\", \"ca-central-1\", \"eu-central-1\", \"eu-west-1\", \"eu-west-2\", \"eu-west-3\", \"eu-north-1\", \"sa-east-1\"]}"
+        default: "{\"aws_region\": [ \"us-west-2\" ]}"
 
 jobs:
   publish-prod:
@@ -27,59 +27,54 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
-          role-duration-seconds: 1200
           aws-region: us-east-1
       - name: download layer from source
         run: |
-          URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.sourceLayerARN }} --query Content.Location --output text)
+          URL=$(aws lambda get-layer-version-by-arn --arn ${{ github.event.inputs.source_layer_arn }} --query Content.Location --output text)
           curl $URL -o layer.zip
       # switch to prod
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN_PROD }}
-          role-duration-seconds: 1200
           aws-region: ${{ matrix.aws_region }}
           mask-aws-account-id: false
       - name: publish
         run: |
-          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          BUCKET_NAME=publish-${{ github.event.inputs.layer_kind }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 mb s3://$BUCKET_NAME
           aws s3 cp layer.zip s3://$BUCKET_NAME
-          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.toLayerName }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
+          layerARN=$(aws lambda publish-layer-version --layer-name ${{ github.event.inputs.layer_name }} --content S3Bucket=$BUCKET_NAME,S3Key=layer.zip --query 'LayerVersionArn' --output text)
           echo $layerARN
-          mkdir ${{ github.event.inputs.toLayerName }}
-          echo $layerARN > ${{ github.event.inputs.toLayerName }}/${{ matrix.aws_region }}
-          cat ${{ github.event.inputs.toLayerName }}/${{ matrix.aws_region }}
+          mkdir ${{ github.event.inputs.layer_name }}
+          echo $layerARN > ${{ github.event.inputs.layer_name }}/${{ matrix.aws_region }}
+          cat ${{ github.event.inputs.layer_name }}/${{ matrix.aws_region }}
       - name: public layer
         run: |
-          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.toLayerName }} --query 'max_by(LayerVersions, &Version).Version')
-          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.toLayerName }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
+          layerVersion=$(aws lambda list-layer-versions --layer-name ${{ github.event.inputs.layer_name }} --query 'max_by(LayerVersions, &Version).Version')
+          aws lambda add-layer-version-permission --layer-name ${{ github.event.inputs.layer_name }} --version-number $layerVersion --principal "*" --statement-id publish --action lambda:GetLayerVersion
       - name: upload layer arn artifact
-        if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ github.event.inputs.toLayerName }}
-          path: ${{ github.event.inputs.toLayerName }}/${{matrix.aws_region}}
+          name: ${{ github.event.inputs.layer_name }}
+          path: ${{ github.event.inputs.layer_name }}/${{matrix.aws_region}}
       - name: clean s3
         if: always()
         run: |
-          BUCKET_NAME=${{ github.event.inputs.toLayerName }}-${{ github.run_id }}-${{ matrix.aws_region }}
+          BUCKET_NAME=publish-${{ github.event.inputs.layer_kind }}-${{ github.run_id }}-${{ matrix.aws_region }}
           aws s3 rb --force s3://$BUCKET_NAME
   generate-note:
-    runs-on: publish-prod
-    needs: init
+    runs-on: ubuntu-latest
+    needs: publish-prod
     steps:
       - name: download layerARNs
         uses: actions/download-artifact@v2
         with:
-          name: ${{ github.event.inputs.toLayerName }}
-          path: ${{ github.event.inputs.toLayerName }}
+          name: ${{ github.event.inputs.layer_name }}
+          path: ${{ github.event.inputs.layer_name }}
       - name: show layerARNs
         run: |
-          for file in ${{ github.event.inputs.toLayerName }}/*
+          for file in ${{ github.event.inputs.layer_name }}/*
           do
           echo $file
           cat $file
@@ -88,7 +83,7 @@ jobs:
         run: |
           echo "| Region | Layer ARN |" >> layer-note
           echo "|  ----  | ----  |" >> layer-note
-          cd ${{ github.event.inputs.toLayerName }}
+          cd ${{ github.event.inputs.layer_name }}
           for file in *
           do
           read arn < $file
@@ -96,6 +91,160 @@ jobs:
           done
           cd ..
           cat layer-note
-      # TODO: build splitting ARN TF file
-      - name: generate TF layers file
-        run: echo 'todo'
+      - name: generate tf layer
+        run: |
+          echo "tf layers" >> layer-tf
+          cd ${{ github.event.inputs.layer_name }}
+          for file in *
+          do
+          read arn < $file
+          echo "\""$file"\" = \""$arn"\"" >> ../layer-tf
+          done
+          cd ..
+          cat layer-tf
+      - name: upload layer tf file
+        uses: actions/upload-artifact@v2
+        with:
+          name: layer.tf
+          path: layer.tf
+  canary-test:
+    runs-on: ubuntu-latest
+    needs: generate-note
+    name: Canary Test - ${{ matrix.aws_region }} - ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        aws_region:  [ "us-west-2"]
+        # We need to define the raw parameters to the matrix here but will customize each
+        # below.
+        name:
+          - java-awssdk-agent
+          - java-awssdk-wrapper
+          - nodejs-awssdk
+          - python38
+        include:
+          - name: java-awssdk-agent
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: sample-apps/java-agent-aws-sdk-terraform
+            expected_template: adot/utils/expected-templates/java-awssdk-agent.json
+          - name: java-awssdk-wrapper
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: sample-apps/java-wrapper-aws-sdk-terraform
+            expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
+          - name: java-okhttp-wrapper
+            language: java
+            build_directory: java
+            build_command: ./build.sh
+            terraform_directory: sample-apps/java-wrapper-okhttp-terraform
+            expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
+          - name: nodejs-awssdk
+            language: nodejs
+            build_directory: opentelemetry-lambda/nodejs
+            build_command: npm install
+            terraform_directory: sample-apps/nodejs-aws-sdk-terraform
+            expected_template: adot/utils/expected-templates/nodejs-awssdk.json
+          - name: python38
+            language: python
+            build_directory: opentelemetry-lambda/python
+            build_command: |
+              cd sample-apps
+              ./build.sh
+            terraform_directory: sample-apps/python-aws-sdk-aiohttp-terraform
+            expected_template: adot/utils/expected-templates/python.json
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-java@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          distribution: adopt
+          java-version: '11'
+      - name: Cache (Java)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'java' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - uses: actions/setup-node@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          node-version: '14'
+      - name: Cache (NodeJS)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'nodejs' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - uses: actions/setup-python@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          python-version: '3.x'
+      - name: Cache (Python)
+        uses: actions/cache@v2
+        if: ${{ matrix.language == 'python' }}
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: download layer tf file
+        uses: actions/download-artifact@v2
+        with:
+          name: layer.tf
+      - name: overwrite layer.tf
+        run: cp -r layer.tf ${{ matrix.terraform_directory }}/layer.tf
+      - name: Build functions
+        run: ${{ matrix.build_command }}
+        working-directory: ${{ matrix.build_directory }}
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE_ARN }}
+          role-duration-seconds: 1200
+          aws-region: ${{ matrix.aws_region }}
+      - uses: hashicorp/setup-terraform@v1
+      - name: Initialize terraform
+        run: terraform init
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Apply terraform
+        run: terraform apply -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
+        env:
+          TF_VAR_function_name: hello-lambda-${{ matrix.name }}-${{ github.run_id }}-${{ matrix.aws_region }}
+      - name: Extract endpoint
+        id: extract-endpoint
+        run: terraform output -raw api-gateway-url
+        working-directory: ${{ matrix.terraform_directory }}
+      - name: Send request to endpoint
+        run: curl -sS ${{ steps.extract-endpoint.outputs.stdout }}
+      - name: Checkout test framework
+        uses: actions/checkout@v2
+        with:
+          repository: aws-observability/aws-otel-test-framework
+          path: test-framework
+      - name: validate sample
+        run: |
+          cp ${{ matrix.expected_template }} test-framework/validator/src/main/resources/expected-data-template/lambdaExpectedTrace.mustache
+          cd test-framework
+          ./gradlew :validator:run --args="-c default-lambda-validation.yml --endpoint ${{ steps.extract-endpoint.outputs.stdout }} --region $AWS_REGION"
+      - name: Destroy terraform
+        if: always()
+        run: terraform destroy -auto-approve
+        working-directory: ${{ matrix.terraform_directory }}
