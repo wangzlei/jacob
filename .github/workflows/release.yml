@@ -117,40 +117,46 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        aws_region:  [ "us-west-2"]
+        aws_region: ${{fromJson(github.event.inputs.aws_region).aws_region}}
         # We need to define the raw parameters to the matrix here but will customize each
         # below.
         name:
           - java-awssdk-agent
           - java-awssdk-wrapper
+          - java-okhttp-wrapper
           - nodejs-awssdk
           - python38
         include:
           - name: java-awssdk-agent
+            layer_kind: java-agent
             language: java
             build_directory: java
             build_command: ./build.sh
             terraform_directory: sample-apps/java-agent-aws-sdk-terraform
             expected_template: adot/utils/expected-templates/java-awssdk-agent.json
           - name: java-awssdk-wrapper
+            layer_kind: java-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
             terraform_directory: sample-apps/java-wrapper-aws-sdk-terraform
             expected_template: adot/utils/expected-templates/java-awssdk-wrapper.json
           - name: java-okhttp-wrapper
+            layer_kind: java-wrapper
             language: java
             build_directory: java
             build_command: ./build.sh
             terraform_directory: sample-apps/java-wrapper-okhttp-terraform
             expected_template: adot/utils/expected-templates/java-okhttp-wrapper.json
           - name: nodejs-awssdk
+            layer_kind: nodejs
             language: nodejs
             build_directory: opentelemetry-lambda/nodejs
             build_command: npm install
             terraform_directory: sample-apps/nodejs-aws-sdk-terraform
             expected_template: adot/utils/expected-templates/nodejs-awssdk.json
           - name: python38
+            layer_kind: python38
             language: python
             build_directory: opentelemetry-lambda/python
             build_command: |
@@ -210,8 +216,8 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: layer.tf
-          path: ${{ matrix.terraform_directory }}/layer.tf
       - name: overwrite layer.tf
+        if: ${{ github.event.inputs.layer_kind == matrix.layer_kind }}
         run: |
           cat ${{ matrix.terraform_directory }}/layer.tf
           cp -r layer.tf ${{ matrix.terraform_directory }}/layer.tf
