@@ -153,6 +153,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: layer.tf
+          path: ${{ matrix.terraform_directory }}/layer.tf
       - name: overwrite layer.tf
         run: |
           cat ${{ matrix.terraform_directory }}/layer.tf
