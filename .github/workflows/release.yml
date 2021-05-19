@@ -264,6 +264,8 @@ jobs:
       - name: Create commits
         if: ${{ github.event.inputs.layer_kind == matrix.layer_kind }}
         run: |
+          git config user.name 'what'
+          git config user.email 'what@users.noreply.github.com'
           git add ${{ matrix.terraform_directory }}/layer.tf
           git commit -m "release layer"
       - name: Create Pull Request
