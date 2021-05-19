@@ -267,6 +267,7 @@ jobs:
           git add ${{ matrix.terraform_directory }}/layer.tf
           git commit -m "release layer"
       - name: Create Pull Request
+        id: cpr
         if: ${{ github.event.inputs.layer_kind == matrix.layer_kind }}
         uses: peter-evans/create-pull-request@v3
       - name: Check outputs
