@@ -261,28 +261,3 @@ jobs:
         if: always()
         run: terraform destroy -auto-approve
         working-directory: ${{ matrix.terraform_directory }}
-  create-pr:
-    runs-on: ubuntu-latest
-    needs: generate-note
-    name: Create PR
-    steps:
-      - uses: actions/checkout@v2
-      - name: download layer tf file
-        uses: actions/download-artifact@v2
-        with:
-          name: layer.tf
-      - name: overwrite layer.tf
-        run: |
-          JSON=$(cat .github/maps/kind-path.json)
-          cat $JSON
-          path = ${{ fromJson($JSON).${{ github.event.inputs.layer_kind }} }}
-          cat $path/layer.tf
-          mv -f layer.tf ${{ matrix.terraform_directory }}/layer.tf
-          cat $path/layer.tf
-      - name: Create Pull Request
-        id: cpr
-        uses: peter-evans/create-pull-request@v3
-      - name: Check outputs
-        run: |
-          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
-          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
